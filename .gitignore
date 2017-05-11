@@ -1,0 +1,14 @@
+/.idea
+.idea
+.sass-cache
+node_modules
+venv
+*.pyc
+frontend/.sass-cache
+frontend/node_modules
+public/auto_collected
+*.sql
+logs
+/og_django_utils.egg-info/
+/dist/
+/build/
