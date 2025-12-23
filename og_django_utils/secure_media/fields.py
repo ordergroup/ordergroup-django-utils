@@ -1,18 +1,17 @@
 from base64 import b64encode
 
 from django.conf import settings
-from django.db.models.fields.files import ImageFieldFile, FileField, FieldFile, ImageField
+from django.db.models.fields.files import FieldFile, FileField, ImageField, ImageFieldFile
 from stdimage.models import StdImageField, StdImageFieldFile
 
-
-SENDFILE_ROOT = getattr(settings, 'SENDFILE_ROOT', None)
+SENDFILE_ROOT = getattr(settings, "SENDFILE_ROOT", None)
 
 
 class SecureImageFileMixin:
     is_secure_media = True
 
     def _get_url(self):
-        if not getattr(settings, 'DEFAULT_SECURE_MEDIA_FILES', {}).get(str(self.field)):
+        if not getattr(settings, "DEFAULT_SECURE_MEDIA_FILES", {}).get(str(self.field)):
             self._require_file()
         return self.storage.url(self.name, field_value=self)
 
@@ -25,14 +24,14 @@ class SecureImageFileMixin:
         file_path = self.get_path(variant=variant)
         file_abs_path = SENDFILE_ROOT + file_path
         try:
-            secure_file = open(file_abs_path, 'rb')
+            secure_file = open(file_abs_path, "rb")
             secure_file_encoded = b64encode(secure_file.read())
         except:
-            secure_file_encoded = ''
-        secure_file_encoded = secure_file_encoded or ''
+            secure_file_encoded = ""
+        secure_file_encoded = secure_file_encoded or ""
         if no_filename:
             return secure_file_encoded
-        return {'filename': file_path, 'b64_data': secure_file_encoded}
+        return {"filename": file_path, "b64_data": secure_file_encoded}
 
 
 class SecureFieldFile(SecureImageFileMixin, FieldFile):
@@ -75,9 +74,6 @@ class SecureStdImageField(StdImageField):
             field = getattr(instance, self.name)
             if field._committed:
                 for name, variation in list(self.variations.items()):
-                    variation_name = self.attr_class.get_variation_name(
-                        field.name,
-                        variation['name']
-                    )
+                    variation_name = self.attr_class.get_variation_name(field.name, variation["name"])
                     variation_field = SecureImageFieldFile(instance, self, variation_name)
                     setattr(field, name, variation_field)

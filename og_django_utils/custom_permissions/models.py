@@ -4,15 +4,15 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-APP_LABEL = getattr(settings, 'CUSTOM_PERMISSIONS_APP_LABEL', 'custom_permissions')
+APP_LABEL = getattr(settings, "CUSTOM_PERMISSIONS_APP_LABEL", "custom_permissions")
 
 
 class CustomPermissionModel(models.Model):
     class Meta:
         managed = False
         default_permissions = ()
-        verbose_name = _('Uprawnienie systemowe')
-        verbose_name_plural = _('Uprawnienia systemowe')
+        verbose_name = _("Uprawnienie systemowe")
+        verbose_name_plural = _("Uprawnienia systemowe")
 
 
 class CustomPermissionManager(PermissionManager):
@@ -24,8 +24,8 @@ class CustomPermissionManager(PermissionManager):
         return ct
 
     def create(self, **kwargs):
-        if 'content_type' not in kwargs.keys():
-            kwargs['content_type'] = self.get_content_type()
+        if "content_type" not in kwargs.keys():
+            kwargs["content_type"] = self.get_content_type()
         return super().create(**kwargs)
 
 
@@ -43,8 +43,8 @@ class CustomPermission(Permission):
 
 class UserCustomPermissionMixin:
     def has_custom_perm(self, perm):
-        if len(perm.split('.')) == 1 or not perm.startswith(APP_LABEL):
-            perm = APP_LABEL + '.' + perm
+        if len(perm.split(".")) == 1 or not perm.startswith(APP_LABEL):
+            perm = APP_LABEL + "." + perm
             return self.has_perm(perm)
 
     def custom_permissions(self):

@@ -1,4 +1,3 @@
-
 try:
     from rest_framework.fields import CharField
 
@@ -6,6 +5,7 @@ try:
         """
         Serializator mapujący wartości enuma na i z wartości tekstowych (API posługuje się stringami na zewnątrz)
         """
+
         def __init__(self, enum, **kwargs):
             super().__init__(**kwargs)
             self.enum = enum
@@ -17,13 +17,13 @@ try:
             for value, name in self.enum.names.items():
                 if name == data:
                     return value
-            self.fail('invalid')
-
+            self.fail("invalid")
 
     class NamedEnumOptionsSerializerField(CharField):
         """
         Serializator dostępnych opcji dla danego enuma
         """
+
         def to_representation(self, instance):
             return instance.choices
 

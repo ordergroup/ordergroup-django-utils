@@ -1,16 +1,14 @@
 import os
 import tempfile
 
+from django.core.files import File
 from filebrowser.base import FileObject
-from filebrowser.settings import VERSION_QUALITY, DEFAULT_PERMISSIONS
+from filebrowser.settings import DEFAULT_PERMISSIONS, VERSION_QUALITY
 from filebrowser.utils import process_image
 from PIL import Image
 
-from django.core.files import File
-
 
 class FileObjectExtended(FileObject):
-
     def is_webm(self):
         base, ext = os.path.splitext(self.path)
         return ext == ".webm"
@@ -22,13 +20,13 @@ class FileObjectExtended(FileObject):
 
         version_path = self.version_path(version_suffix, extra_options)
         filename, ext = os.path.splitext(version_path)
-        webp_path = f'{filename}.webp'
+        webp_path = f"{filename}.webp"
         if not ext:
             return FileObject(version_path, site=self.site)
 
         if not self.site.storage.isfile(version_path):
             version_path = self._generate_version(version_path, options)
-        elif hasattr(self.site.storage, 'get_modified_time'):
+        elif hasattr(self.site.storage, "get_modified_time"):
             if self.site.storage.get_modified_time(path) > self.site.storage.get_modified_time(version_path):
                 version_path = self._generate_version(version_path, options)
         elif self.site.storage.modified_time(path) > self.site.storage.modified_time(version_path):
@@ -36,7 +34,7 @@ class FileObjectExtended(FileObject):
 
         if not self.site.storage.isfile(webp_path):
             self._generate_version(webp_path, options, webp_only=True)
-        elif hasattr(self.site.storage, 'get_modified_time'):
+        elif hasattr(self.site.storage, "get_modified_time"):
             if self.site.storage.get_modified_time(path) > self.site.storage.get_modified_time(webp_path):
                 version_path = self._generate_version(webp_path, options, webp_only=True)
         elif self.site.storage.modified_time(path) > self.site.storage.modified_time(webp_path):
@@ -49,7 +47,7 @@ class FileObjectExtended(FileObject):
 
     def _generate_webp_version(self, webp_path, im):
         webp_temp = File(tempfile.NamedTemporaryFile())
-        im.save(webp_temp, 'WEBP')
+        im.save(webp_temp, "WEBP")
         self.site.storage.save(webp_path, webp_temp)
 
     def get_gif_frame(self):
@@ -59,10 +57,10 @@ class FileObjectExtended(FileObject):
             try:
                 f = self.site.storage.open(self.path)
             except OSError:
-                raise ValueError('path')
+                raise ValueError("path")
             image = Image.open(f)
             frame_temp = File(tempfile.NamedTemporaryFile())
-            image.convert('RGB').save(frame_temp, 'JPEG')
+            image.convert("RGB").save(frame_temp, "JPEG")
             self.site.storage.save(frame_path, frame_temp)
             image.close()
         return FileObjectExtended(frame_path, site=self.site)
@@ -84,14 +82,14 @@ class FileObjectExtended(FileObject):
         root, ext = os.path.splitext(version_basename)
         version = process_image(im, options)
         filename, ext = os.path.splitext(version_path)
-        webp_path = f'{filename}.webp'
+        webp_path = f"{filename}.webp"
         self._generate_webp_version(webp_path, version)
         if webp_only:
             return webp_path
         if not version:
             version = im
-        if 'methods' in options:
-            for m in options['methods']:
+        if "methods" in options:
+            for m in options["methods"]:
                 if callable(m):
                     version = m(version)
 
@@ -101,7 +99,12 @@ class FileObjectExtended(FileObject):
 
         # save version
         try:
-            version.save(tmpfile, format=Image.EXTENSION[ext.lower()], quality=VERSION_QUALITY, optimize=(os.path.splitext(version_path)[1] != '.gif'))
+            version.save(
+                tmpfile,
+                format=Image.EXTENSION[ext.lower()],
+                quality=VERSION_QUALITY,
+                optimize=(os.path.splitext(version_path)[1] != ".gif"),
+            )
         except OSError:
             version.save(tmpfile, format=Image.EXTENSION[ext.lower()], quality=VERSION_QUALITY)
         # remove old version, if any

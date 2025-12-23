@@ -1,4 +1,3 @@
-
 from stdimage.models import StdImageField, StdImageFieldFile
 
 
@@ -10,8 +9,12 @@ class ProgressiveImageFieldFile(StdImageFieldFile):
         """Render an image variation and saves it to the storage."""
         try:
             return super().render_variation(file_name, *args, **kwargs)
-        except OSError as e:
-            print('Unable to generate variation for file {}, as it was not found'.format(file_name or kwargs.get('file_name')))
+        except OSError:
+            print(
+                "Unable to generate variation for file {}, as it was not found".format(
+                    file_name or kwargs.get("file_name")
+                )
+            )
 
 
 class ProgressiveImageField(StdImageField):
@@ -30,9 +33,6 @@ class ProgressiveImageField(StdImageField):
             field = getattr(instance, self.name)
             if field._committed:
                 for name, variation in list(self.variations.items()):
-                    variation_name = self.attr_class.get_variation_name(
-                        field.name,
-                        variation['name']
-                    )
+                    variation_name = self.attr_class.get_variation_name(field.name, variation["name"])
                     variation_field = ProgressiveImageFieldFile(instance, self, variation_name)
                     setattr(field, name, variation_field)

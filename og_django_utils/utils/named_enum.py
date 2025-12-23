@@ -16,8 +16,8 @@ class NamedEnumMetaclass(type):
         changed_future_class_attr = {k: v for k, v in future_class_attr.items() if not mcls.is_en(v)}
         names = {}
         mcls.prepare_ens_as_future_attr(ens, changed_future_class_attr, names)
-        changed_future_class_attr['names'] = names
-        changed_future_class_attr['choices'] = list(names.items())
+        changed_future_class_attr["names"] = names
+        changed_future_class_attr["choices"] = list(names.items())
         return type.__new__(mcls, future_class_name, future_class_parents, changed_future_class_attr)
 
     @classmethod
@@ -54,8 +54,4 @@ class NamedEnum(metaclass=NamedEnumMetaclass):
 
     @classmethod
     def as_field(cls, default=None, **kwargs):
-        return models.SmallIntegerField(
-            default=default,
-            choices=cls.choices,
-            **kwargs
-        )
+        return models.SmallIntegerField(default=default, choices=cls.choices, **kwargs)

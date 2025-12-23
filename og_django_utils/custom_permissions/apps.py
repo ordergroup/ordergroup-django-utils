@@ -5,7 +5,7 @@ from .loader import create_permissions
 
 
 class CustomPermissions(AppConfig):
-    name = 'og_django_utils.custom_permissions'
+    name = "og_django_utils.custom_permissions"
     verbose_name = "OG Django Custom Permissions"
 
     def ready(self):

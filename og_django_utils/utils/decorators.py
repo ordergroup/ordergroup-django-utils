@@ -1,4 +1,3 @@
-
 from django.utils.decorators import method_decorator
 
 
@@ -8,6 +7,7 @@ def class_view_decorator(function_decorator):
         return view_klass
 
     return simple_decorator
+
 
 # def require_company_administrator(view_func):
 #     def wrapped(request, *args, **kwargs):

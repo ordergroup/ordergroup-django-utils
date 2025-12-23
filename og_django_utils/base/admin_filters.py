@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
 
@@ -6,10 +5,10 @@ from django.core.exceptions import ImproperlyConfigured
 class BaseAdminSelectFilter(admin.SimpleListFilter):
     title = None
     parameter_name = None
-    template = 'base/admin/select_filter.html'
+    template = "base/admin/select_filter.html"
     field_to_filter_against = None  # set in init
-    field_to_display = 'name'  # field that is used to create display title
-    field_to_order = 'name'  # field that is used to create display title
+    field_to_display = "name"  # field that is used to create display title
+    field_to_order = "name"  # field that is used to create display title
 
     class Meta:
         model = None
@@ -20,7 +19,7 @@ class BaseAdminSelectFilter(admin.SimpleListFilter):
         if not self.parameter_name:
             self.parameter_name = self.make_parameter_name()
         if not self.field_to_filter_against:
-            self.field_to_filter_against = f'{self.parameter_name}_id'
+            self.field_to_filter_against = f"{self.parameter_name}_id"
         super().__init__(request, params, model, model_admin)
 
     def make_parameter_name(self):
@@ -29,9 +28,9 @@ class BaseAdminSelectFilter(admin.SimpleListFilter):
         """
         model = self.Meta.model
         if model:
-            parameter_name = f'{model.__name__.lower()}'
+            parameter_name = f"{model.__name__.lower()}"
             return parameter_name
-        raise ImproperlyConfigured('Meta.model is not set')
+        raise ImproperlyConfigured("Meta.model is not set")
 
     def queryset(self, request, queryset):
         """
@@ -69,7 +68,7 @@ class BaseAdminSelectFilter(admin.SimpleListFilter):
         :param single_object: single Meta.model object
         :return: str that defines displayed title of object on list
         """
-        title = f'[{single_object.id}] {getattr(single_object, self.field_to_display)}'
+        title = f"[{single_object.id}] {getattr(single_object, self.field_to_display)}"
         return title
 
     def get_queryset_for_lookup(self):
@@ -77,5 +76,5 @@ class BaseAdminSelectFilter(admin.SimpleListFilter):
         :return: QuerySet of Meta.model ordered by $field_to_order
         """
         if not self.Meta.model:
-            raise ImproperlyConfigured('Meta.model is not set')
+            raise ImproperlyConfigured("Meta.model is not set")
         return self.Meta.model.objects.all().order_by(self.field_to_order)

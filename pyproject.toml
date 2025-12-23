@@ -1,28 +1,32 @@
 [project]
 name = "og-django-utils"
-version = "0.2.0"
+version = "1.0.0"
 description = "OG Shared utils for Django projects"
 authors = [
     {name = "Michał Dżaman", email = "michal@ordergroup.pl"}
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = {text = "BSD License"}
 classifiers = [
     "Framework :: Django",
     "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "django>=4.2,<5.0",
+    "django>=4.2,<5.2",
     "django-stdimage>=6.0.0",
     "pillow>=10.0.0",
     "packaging>=23.0",
@@ -34,17 +38,13 @@ encrypted_media_paths = [
 ]
 dev = [
     "ruff>=0.8.4",
-    "black>=24.10.0",
-    "isort>=5.13.2",
     "pytest>=8.3.4",
     "pytest-django>=4.9.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "ruff>=0.8.4",
-    "black>=24.10.0",
-    "isort>=5.13.2",
     "pytest>=8.3.4",
     "pytest-django>=4.9.0",
 ]
@@ -61,34 +61,32 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "C4", "UP"]
-ignore = ["E501", "B008", "C901"]
+ignore = ["E501", "B008", "C901", "E722", "B904"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"og_django_utils/management/**" = ["E722", "B904", "B007", "C408"]
+"og_django_utils/secure_media/**" = ["E722", "B904"]
+"og_django_utils/utils/images.py" = ["B904"]
 
-[tool.black]
-line-length = 120
-target-version = ["py311"]
-skip-string-normalization = true
-exclude = '''
-/(
-    migrations
-  | venv
-  | \.venv
-  | __pycache__
-)/
-'''
-
-[tool.isort]
-profile = "black"
-skip = ["migrations", "venv", ".venv"]
-line_length = 120
-lines_between_types = 1
 
 [tool.pytest.ini_options]
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 testpaths = ["tests"]
 addopts = "--verbose"
+
+[tool.hatch.build.targets.wheel]
+packages = ["og_django_utils"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/og_django_utils",
+    "/tests",
+    "/LICENSE",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/pyproject.toml",
+]
 
 [build-system]
 requires = ["hatchling"]

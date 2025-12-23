@@ -3,7 +3,13 @@
 .sass-cache
 node_modules
 venv
+.venv
 *.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 frontend/.sass-cache
 frontend/node_modules
 public/auto_collected
@@ -12,3 +18,9 @@ logs
 /og_django_utils.egg-info/
 /dist/
 /build/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+*.log

@@ -1,7 +1,5 @@
-
 try:
     from rest_framework.fields import Field
-
 
     class SecureFieldBase64SerializerField(Field):
         """
@@ -17,4 +15,4 @@ try:
             return instance.get_b64_content(self.variant, self.no_filename)
 
 except ImportError:
-    raise ImportError('This feature requires the djangorestframework package to be installed')
+    raise ImportError("This feature requires the djangorestframework package to be installed")

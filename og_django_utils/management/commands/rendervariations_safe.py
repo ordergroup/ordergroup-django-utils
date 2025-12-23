@@ -1,4 +1,3 @@
-
 import sys
 import traceback
 from multiprocessing import Pool, cpu_count
@@ -21,44 +20,37 @@ BAR = None
 class MemoryUsageWidget(progressbar.widgets.WidgetBase):
     def __call__(self, progress, data):
         if resource is None:
-            return 'RAM: N/A'
-        return f'RAM: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024:10.1f} MB'
+            return "RAM: N/A"
+        return f"RAM: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024:10.1f} MB"
 
 
 class Command(BaseCommand):
-    help = 'Renders all variations of a ProgressiveImageField.'
-    args = '<app.model.field app.model.field>'
+    help = "Renders all variations of a ProgressiveImageField."
+    args = "<app.model.field app.model.field>"
 
     def add_arguments(self, parser):
-        parser.add_argument('field_path',
-                            nargs='+',
-                            type=str,
-                            help='<app.model.field app.model.field>')
-        parser.add_argument('--replace',
-                            action='store_true',
-                            dest='replace',
-                            default=False,
-                            help='Replace existing files.')
+        parser.add_argument("field_path", nargs="+", type=str, help="<app.model.field app.model.field>")
+        parser.add_argument(
+            "--replace", action="store_true", dest="replace", default=False, help="Replace existing files."
+        )
 
     def handle(self, *args, **options):
-        replace = options.get('replace')
-        if len(options['field_path']):
-            routes = options['field_path']
+        replace = options.get("replace")
+        if len(options["field_path"]):
+            routes = options["field_path"]
         else:
-            routes = [options['field_path']]
+            routes = [options["field_path"]]
         for route in routes:
             try:
-                app_label, model_name, field_name = route.rsplit('.')
+                app_label, model_name, field_name = route.rsplit(".")
             except ValueError:
-                raise CommandError(f"Error parsing field_path '{route}'. Use format "
-                                   "<app.model.field app.model.field>."
-                                   )
+                raise CommandError(f"Error parsing field_path '{route}'. Use format <app.model.field app.model.field>.")
             model_class = apps.get_model(app_label, model_name)
             field = model_class._meta.get_field(field_name)
 
-            queryset = model_class._default_manager \
-                .exclude(**{f'{field_name}__isnull': True}) \
-                .exclude(**{field_name: ''})
+            queryset = model_class._default_manager.exclude(**{f"{field_name}__isnull": True}).exclude(
+                **{field_name: ""}
+            )
             obj = queryset.first()
             do_render = True
             if obj:
@@ -71,18 +63,15 @@ class Command(BaseCommand):
 
     @staticmethod
     def render(field, images, count, replace, do_render):
-        pool = Pool(
-            initializer=init_progressbar,
-            initargs=[count]
-        )
+        pool = Pool(initializer=init_progressbar, initargs=[count])
         args = [
-            dict(
-                file_name=file_name,
-                do_render=do_render,
-                variations=field.variations,
-                replace=replace,
-                storage=field.storage.deconstruct()[0],
-            )
+            {
+                "file_name": file_name,
+                "do_render": do_render,
+                "variations": field.variations,
+                "replace": replace,
+                "storage": field.storage.deconstruct()[0],
+            }
             for file_name in images
         ]
         pool.map(render_field_variations, args)
@@ -93,33 +82,37 @@ class Command(BaseCommand):
 
 def init_progressbar(count):
     global BAR
-    BAR = progressbar.ProgressBar(maxval=count, widgets=(
-        progressbar.RotatingMarker(),
-        ' | ', MemoryUsageWidget(),
-        f' | CPUs: {cpu_count()}',
-        ' | ', progressbar.AdaptiveETA(),
-        ' | ', progressbar.Percentage(),
-        ' ', progressbar.Bar(),
-    ))
+    BAR = progressbar.ProgressBar(
+        maxval=count,
+        widgets=(
+            progressbar.RotatingMarker(),
+            " | ",
+            MemoryUsageWidget(),
+            f" | CPUs: {cpu_count()}",
+            " | ",
+            progressbar.AdaptiveETA(),
+            " | ",
+            progressbar.Percentage(),
+            " ",
+            progressbar.Bar(),
+        ),
+    )
 
 
 def finish_progressbar():
     BAR.finish()
 
 
-def render_variations(file_name, variations, replace=False,
-                      storage=default_storage):
+def render_variations(file_name, variations, replace=False, storage=default_storage):
     """Render all variations for a given field."""
-    for key, variation in variations.items():
-        ProgressiveImageFieldFile.render_variation(
-            file_name, variation, replace, storage
-        )
+    for _key, variation in variations.items():
+        ProgressiveImageFieldFile.render_variation(file_name, variation, replace, storage)
 
 
 def render_field_variations(kwargs):
     try:
-        kwargs['storage'] = get_storage_class(kwargs['storage'])()
-        do_render = kwargs.pop('do_render')
+        kwargs["storage"] = get_storage_class(kwargs["storage"])()
+        do_render = kwargs.pop("do_render")
         if callable(do_render):
             do_render = do_render(**kwargs)
         if do_render:

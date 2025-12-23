@@ -4,8 +4,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
 
-
-APP_LABEL = getattr(settings, 'CUSTOM_PERMISSIONS_APP_LABEL', 'custom_permissions')
+APP_LABEL = getattr(settings, "CUSTOM_PERMISSIONS_APP_LABEL", "custom_permissions")
 
 
 def permission_required_extended(perm, login_url=None, raise_exception=False, raise_exception_for_users_only=False):
@@ -33,11 +32,11 @@ def permission_required_extended(perm, login_url=None, raise_exception=False, ra
 
 
 def require_custom_permission(perm_name, login_url=None, raise_exception=True, raise_exception_for_users_only=True):
-    if len(perm_name.split('.')) == 1 or not perm_name.startswith(APP_LABEL):
-        perm_name = APP_LABEL + '.' + perm_name
+    if len(perm_name.split(".")) == 1 or not perm_name.startswith(APP_LABEL):
+        perm_name = APP_LABEL + "." + perm_name
     return permission_required_extended(perm_name, login_url, raise_exception, raise_exception_for_users_only)
 
 
 def custom_permission_required(perm_name, login_url=None, raise_exception=True, raise_exception_for_users_only=True):
     decorator = require_custom_permission(perm_name, login_url, raise_exception, raise_exception_for_users_only)
-    return method_decorator(decorator, name='dispatch')
+    return method_decorator(decorator, name="dispatch")

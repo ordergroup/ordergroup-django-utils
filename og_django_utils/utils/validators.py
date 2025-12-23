@@ -10,15 +10,15 @@ class OneNumericAndUppercaseValidator:
     def validate(self, password, user=None):
         # check for digit
         if not any(char.isdigit() for char in password):
-            raise ValidationError(_('Your password must contain at least one digit.'))
+            raise ValidationError(_("Your password must contain at least one digit."))
 
         # check for a lowercase letter
         if not any(char.isalpha() and char.islower() for char in password):
-            raise ValidationError(_('Your password must contain at least one lowercase letter.'))
+            raise ValidationError(_("Your password must contain at least one lowercase letter."))
 
         # check for an uppercase letter
         if not any(char.isalpha() and char.isupper() for char in password):
-            raise ValidationError(_('Your password must contain at least one uppercase letter.'))
+            raise ValidationError(_("Your password must contain at least one uppercase letter."))
 
     def get_help_text(self):
-        return _('Your password must contain at least one uppercase letter, one lowercase leter and one digit.')
+        return _("Your password must contain at least one uppercase letter, one lowercase leter and one digit.")
