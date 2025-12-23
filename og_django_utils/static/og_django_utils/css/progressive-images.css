@@ -1,0 +1,97 @@
+/* line 1, ../../../../frontend_src/styles/progressive-images.scss */
+.progressive {
+  position: relative;
+  background: #eeeeee;
+  background-size: cover;
+  overflow: hidden;
+  width:100%;
+  height:100%;
+}
+/* line 7, ../../../../frontend_src/styles/progressive-images.scss */
+.progressive img.target {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: all 0.4s ease-in-out;
+}
+/* line 16, ../../../../frontend_src/styles/progressive-images.scss */
+.progressive .thumb-loaded {
+  opacity: 1;
+  filter: blur(10px);
+  transform: scale(1);
+}
+/* line 21, ../../../../frontend_src/styles/progressive-images.scss */
+.progressive .large-loaded {
+  opacity: 1;
+}
+/* line 24, ../../../../frontend_src/styles/progressive-images.scss */
+.progressive .thumb-hidden {
+  opacity: 0;
+}
+
+/* line 30, ../../../../frontend_src/styles/progressive-images.scss */
+.progressive__img {
+  width: 100%;
+  height: 100%;
+  transform: translateZ(0);
+}
+
+/* line 36, ../../../../frontend_src/styles/progressive-images.scss */
+.progressive--not-loaded {
+  filter: blur(10px);
+}
+
+/* line 40, ../../../../frontend_src/styles/progressive-images.scss */
+.progressive--is-loaded {
+  filter: blur(8px);
+  animation: sharpen 0.5s both;
+}
+
+@keyframes sharpen {
+  from {
+    filter: blur(20px);
+  }
+  to {
+    filter: blur(0px);
+  }
+}
+
+.svg-spinner {
+  animation: rotate 2s linear infinite;
+  z-index: 2;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -25px 0 0 -25px;
+  width: 50px;
+  height: 50px;
+  background: transparent;
+}
+.svg-spinner .path {
+  stroke: #ffffff;
+  stroke-linecap: round;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}

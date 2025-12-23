@@ -63,7 +63,6 @@ if PyTest:
 for scheme in INSTALL_SCHEMES.values():
     scheme['data'] = scheme['purelib']
 
-
 # Compile the list of packages available, because distutils doesn't have
 # an easy way to do this.
 packages, package_data = [], {}
@@ -108,6 +107,27 @@ for dirpath, dirnames, filenames in os.walk(package_dir):
 version = __import__('og_django_utils').__version__
 readme = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
 
+install_requires = [
+    'django-stdimage==2.4.1'
+]
+
+extras_require = {
+    'encrypted_media_paths': ['cryptography==1.8.1'],
+}
+
+# PIL or pillow required
+# try except code copied from mezzanine project
+# https://github.com/stephenmcd/mezzanine/blob/master/setup.py
+try:
+    from PIL import Image, ImageOps
+except ImportError:
+    try:
+        import Image, ImageFile, ImageOps
+    except ImportError:
+        # no way to install pillow/PIL with jython, so exclude this in any case
+        if not sys.platform.startswith('java'):
+            install_requires += ["pillow"]
+
 setup(
     name='og-django-utils',
     version=version,
@@ -120,7 +140,8 @@ setup(
     author='Michał Dżaman',
     author_email='michal@ordergroup.pl',
     platforms=['any'],
-    # install_requires=['six>=1.2'],
+    install_requires=install_requires,
+    extras_require=extras_require,
     classifiers=[
         'Framework :: Django',
         'Intended Audience :: Developers',

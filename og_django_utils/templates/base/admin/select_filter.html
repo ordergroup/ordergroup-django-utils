@@ -1,0 +1,15 @@
+{% load i18n %}
+<h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
+<ul>
+    <li>
+        <select name="{{ field_name }}" style="width: 100%"
+                onchange="window.location.href = this.options[this.selectedIndex].getAttribute('data-url');">
+            {% for choice in choices %}
+                <option {% if choice.selected %} selected="selected" {% endif %} value="{{ choice.val }}"
+                        data-url="{{ choice.query_string|iriencode }}">
+                    {{ choice.display }}
+                </option>
+            {% endfor %}
+        </select>
+    </li>
+</ul>

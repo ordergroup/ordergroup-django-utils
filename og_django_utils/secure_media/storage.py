@@ -1,22 +1,27 @@
 # -*- coding: utf-8 -*-
-from urlparse import urljoin
+from __future__ import absolute_import, division, print_function
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.storage import FileSystemStorage
-from sherlockwaste.settings import SENDFILE_ROOT, SENDFILE_URL
 
-from og_django_utils.secure_media import ParamEncryption
+try:
+    from urlparse import urljoin  # Python 2.X
+except ImportError:
+    from urllib.parse import urljoin  # Python 3+
+
+from .utils import ParamEncryption
 
 
 class SecureFileStorage(FileSystemStorage):
-    def __init__(self, location=SENDFILE_ROOT, base_url=SENDFILE_URL, file_permissions_mode=None, directory_permissions_mode=None):
+    def __init__(self, location=getattr(settings, 'SENDFILE_ROOT', None), base_url=getattr(settings, 'SECURE_MEDIA_URL', None),
+                 file_permissions_mode=None, directory_permissions_mode=None):
         super(SecureFileStorage, self).__init__(location, base_url, file_permissions_mode, directory_permissions_mode)
         self.encrpt_urls = getattr(settings, 'ENCRYPT_PRIVATE_MEDIA_PARAMS', False)
         if self.encrpt_urls:
             crypt_key = getattr(settings, 'PRIVATE_MEDIA_KEY', None)
             if not crypt_key:
-                raise ImproperlyConfigured('Private media encryption enabled and encryption key parameter ENCRYPT_PRIVATE_MEDIA_KEY not set')
+                raise ImproperlyConfigured('Private media encryption enabled and encryption key parameter PRIVATE_MEDIA_KEY not set')
             self.crypt = ParamEncryption(crypt_key)
         else:
             self.crypt = None
