@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from base64 import b64encode
 
 from django.conf import settings
@@ -9,7 +8,7 @@ from stdimage.models import StdImageField, StdImageFieldFile
 SENDFILE_ROOT = getattr(settings, 'SENDFILE_ROOT', None)
 
 
-class SecureImageFileMixin(object):
+class SecureImageFileMixin:
     is_secure_media = True
 
     def _get_url(self):

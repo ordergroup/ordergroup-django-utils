@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
 
 import sys
 import traceback
@@ -24,9 +22,7 @@ class MemoryUsageWidget(progressbar.widgets.WidgetBase):
     def __call__(self, progress, data):
         if resource is None:
             return 'RAM: N/A'
-        return 'RAM: {0:10.1f} MB'.format(
-            resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
-        )
+        return f'RAM: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024:10.1f} MB'
 
 
 class Command(BaseCommand):
@@ -54,14 +50,14 @@ class Command(BaseCommand):
             try:
                 app_label, model_name, field_name = route.rsplit('.')
             except ValueError:
-                raise CommandError("Error parsing field_path '{}'. Use format "
+                raise CommandError(f"Error parsing field_path '{route}'. Use format "
                                    "<app.model.field app.model.field>."
-                                   .format(route))
+                                   )
             model_class = apps.get_model(app_label, model_name)
             field = model_class._meta.get_field(field_name)
 
             queryset = model_class._default_manager \
-                .exclude(**{'%s__isnull' % field_name: True}) \
+                .exclude(**{f'{field_name}__isnull': True}) \
                 .exclude(**{field_name: ''})
             obj = queryset.first()
             do_render = True
@@ -100,7 +96,7 @@ def init_progressbar(count):
     BAR = progressbar.ProgressBar(maxval=count, widgets=(
         progressbar.RotatingMarker(),
         ' | ', MemoryUsageWidget(),
-        ' | CPUs: {}'.format(cpu_count()),
+        f' | CPUs: {cpu_count()}',
         ' | ', progressbar.AdaptiveETA(),
         ' | ', progressbar.Percentage(),
         ' ', progressbar.Bar(),

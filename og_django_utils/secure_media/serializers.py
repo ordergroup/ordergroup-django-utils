@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 try:
     from rest_framework.fields import Field
@@ -10,7 +9,7 @@ try:
         """
 
         def __init__(self, variant=None, no_filename=False, **kwargs):
-            super(SecureFieldBase64SerializerField, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.variant = variant
             self.no_filename = no_filename
 

@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
 import django
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 try:
-    dj_version = StrictVersion(django.get_version())
-except:
-    dj_version = StrictVersion('1.10')
+    dj_version = Version(django.get_version())
+except Exception:
+    dj_version = Version('4.2')
 
-if dj_version < StrictVersion('1.7'):
-    from custom_permissions.loader import create_permissions
-    create_permissions()
-else:
-    default_app_config = 'og_django_utils.custom_permissions.apps.CustomPermissions'
+# Django 1.7+ is required (we're on Django 4.2+)
+default_app_config = 'og_django_utils.custom_permissions.apps.CustomPermissions'

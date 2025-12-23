@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import six
 from uuid import uuid4
@@ -12,8 +11,8 @@ def normalize_polish_chars(text):
     if six.PY2:
         if type(text) is not six.text_type:
             text = six.text_type(text, 'utf-8')
-    trans_tab = {u'ą': 'a', u'ć': 'c', u'ę': 'e', u'ł': 'l', u'ń': 'n', u'ó': 'o', u'ś': 's', u'ż': 'z', u'ź': 'z',
-                 u'Ą': 'A', u'Ć': 'C', u'Ę': 'E', u'Ł': 'L', u'Ń': 'N', u'Ó': 'O', u'Ś': 'S', u'Ż': 'Z', u'Ź': 'Z'}
+    trans_tab = {'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ż': 'z', 'ź': 'z',
+                 'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ż': 'Z', 'Ź': 'Z'}
     return ''.join(trans_tab.get(char, char) for char in text)
 
 
@@ -30,7 +29,7 @@ def safe_ascii(text):
 # It takes no arguments, and should return a tuple of three things (path, args, kwargs):
 
 @deconstructible
-class SafePath(object):
+class SafePath:
     def __init__(self, path, add_hash=True, hash_length=getattr(settings, 'FILE_RANDOM_HASH_LENGTH', 10)):
         self.path = path
         self.add_hash = add_hash

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals, print_function
 
 from stdimage.models import StdImageField, StdImageFieldFile
 
@@ -11,8 +9,8 @@ class ProgressiveImageFieldFile(StdImageFieldFile):
     def render_variation(cls, file_name, *args, **kwargs):
         """Render an image variation and saves it to the storage."""
         try:
-            return super(ProgressiveImageFieldFile, cls).render_variation(file_name, *args, **kwargs)
-        except IOError as e:
+            return super().render_variation(file_name, *args, **kwargs)
+        except OSError as e:
             print('Unable to generate variation for file {}, as it was not found'.format(file_name or kwargs.get('file_name')))
 
 

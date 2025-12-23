@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-import six
 from django.db import models
 
 
-class En(object):
+class En:
     counter = 0
 
     def __init__(self, verbose_name=None):
@@ -15,7 +13,7 @@ class En(object):
 class NamedEnumMetaclass(type):
     def __new__(mcls, future_class_name, future_class_parents, future_class_attr):
         ens = mcls.extract_ens(future_class_attr)
-        changed_future_class_attr = {k: v for k, v in six.iteritems(future_class_attr) if not mcls.is_en(v)}
+        changed_future_class_attr = {k: v for k, v in future_class_attr.items() if not mcls.is_en(v)}
         names = {}
         mcls.prepare_ens_as_future_attr(ens, changed_future_class_attr, names)
         changed_future_class_attr['names'] = names
@@ -24,7 +22,7 @@ class NamedEnumMetaclass(type):
 
     @classmethod
     def extract_ens(mcls, future_class_attr):
-        ens = [(k, v) for k, v in six.iteritems(future_class_attr) if mcls.is_en(v)]
+        ens = [(k, v) for k, v in future_class_attr.items() if mcls.is_en(v)]
         ens.sort(key=lambda kv: kv[1].global_index)
         return ens
 
@@ -42,7 +40,7 @@ class NamedEnumMetaclass(type):
             index += 1
 
 
-class NamedEnum(object, six.with_metaclass(NamedEnumMetaclass)):
+class NamedEnum(metaclass=NamedEnumMetaclass):
     @classmethod
     def name(cls, option):
         return cls.names[option]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 try:
     from rest_framework.fields import CharField
@@ -8,7 +7,7 @@ try:
         Serializator mapujący wartości enuma na i z wartości tekstowych (API posługuje się stringami na zewnątrz)
         """
         def __init__(self, enum, **kwargs):
-            super(NamedEnumSerializerField, self).__init__(**kwargs)
+            super().__init__(**kwargs)
             self.enum = enum
 
         def to_representation(self, instance):

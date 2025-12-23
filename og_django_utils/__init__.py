@@ -1,13 +1,1 @@
-# -*- coding: utf-8 -*-
-VERSION = (0, 1, 18, 'DEV')
-
-# Dynamically calculate the version based on VERSION tuple
-if len(VERSION) > 2 and VERSION[2] is not None:
-    if isinstance(VERSION[2], int):
-        str_version = "%s.%s.%s" % VERSION[:3]
-    else:
-        str_version = "%s.%s_%s" % VERSION[:3]
-else:
-    str_version = "%s.%s" % VERSION[:2]
-
-__version__ = str_version
+__version__ = "0.2.0"

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function
 
 from base64 import b64encode
 
@@ -49,7 +47,7 @@ def get_media_file(request, app_name, model_name, instance_id, field_name, varia
 
     model_field = getattr(model_instance, field_name, None)
     if not model_field or not getattr(model_field, 'is_secure_media', False):
-        default_media_file = getattr(settings, 'DEFAULT_SECURE_MEDIA_FILES', {}).get('{}.{}.{}'.format(app_name, model_name, field_name))
+        default_media_file = getattr(settings, 'DEFAULT_SECURE_MEDIA_FILES', {}).get(f'{app_name}.{model_name}.{field_name}')
         if default_media_file:
             if default_media_file[0] != '/':
                 default_media_file = SENDFILE_ROOT + default_media_file
@@ -69,7 +67,7 @@ def get_media_file(request, app_name, model_name, instance_id, field_name, varia
         except:
             raise
     raise NotImplementedError(
-        'verify_private_media_access method for secure media is not implemented in class {}.{}'.format(app_name, model_name))
+        f'verify_private_media_access method for secure media is not implemented in class {app_name}.{model_name}')
 
 
 def get_media_file_base64(request, app_name, model_name, instance_id, field_name, variant=None):

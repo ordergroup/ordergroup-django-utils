@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function
 
 from cryptography.fernet import Fernet
 
 
-class ParamEncryption(object):
+class ParamEncryption:
     encryption_class = Fernet
 
     def __init__(self, key):

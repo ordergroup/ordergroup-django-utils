@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from decimal import Decimal
 
 import six
@@ -38,18 +37,18 @@ def prepare_tag_context(image, variation=None, min_variation='min', sm_variation
         if param_name.startswith('data_'):
             param_name = param_name.replace('_', '-')
             if type(value) not in [int, float, Decimal]:
-                value = u'"{}"'.format(value)
-            data_params.append('{}={}'.format(param_name, mark_safe(value)))
+                value = f'"{value}"'
+            data_params.append(f'{param_name}={mark_safe(value)}')
 
     full_image = image if not variation else get_image_variation(image, variation, webp=webp_enabled)
     full_image_url = full_image.url if full_image else default_image or ''
-    data_params.append(u'data-progressive="{}"'.format(full_image_url))
+    data_params.append(f'data-progressive="{full_image_url}"')
 
     medium_image = None if not sm_variation else get_image_variation(image, sm_variation, webp=webp_enabled)
     if medium_image:
-        data_params.append(u'data-progressive-sm="{}"'.format(medium_image.url))
+        data_params.append(f'data-progressive-sm="{medium_image.url}"')
 
-    data_params = u' '.join(data_params)
+    data_params = ' '.join(data_params)
     thumb_image = get_image_variation(image, min_variation, webp=webp_enabled)
     thumb_image_url = thumb_image.url if thumb_image else default_image or ''
     return {

@@ -22,7 +22,7 @@ class FileObjectExtended(FileObject):
 
         version_path = self.version_path(version_suffix, extra_options)
         filename, ext = os.path.splitext(version_path)
-        webp_path = '{}.webp'.format(filename)
+        webp_path = f'{filename}.webp'
         if not ext:
             return FileObject(version_path, site=self.site)
 
@@ -54,11 +54,11 @@ class FileObjectExtended(FileObject):
 
     def get_gif_frame(self):
         base, ext = os.path.splitext(self.name)
-        frame_path = "{}_frame.jpg".format(base)
+        frame_path = f"{base}_frame.jpg"
         if not self.site.storage.isfile(frame_path):
             try:
                 f = self.site.storage.open(self.path)
-            except IOError:
+            except OSError:
                 raise ValueError('path')
             image = Image.open(f)
             frame_temp = File(tempfile.NamedTemporaryFile())
@@ -77,14 +77,14 @@ class FileObjectExtended(FileObject):
 
         try:
             f = self.site.storage.open(self.path)
-        except IOError:
+        except OSError:
             return ""
         im = Image.open(f)
         version_dir, version_basename = os.path.split(version_path)
         root, ext = os.path.splitext(version_basename)
         version = process_image(im, options)
         filename, ext = os.path.splitext(version_path)
-        webp_path = '{}.webp'.format(filename)
+        webp_path = f'{filename}.webp'
         self._generate_webp_version(webp_path, version)
         if webp_only:
             return webp_path
@@ -102,7 +102,7 @@ class FileObjectExtended(FileObject):
         # save version
         try:
             version.save(tmpfile, format=Image.EXTENSION[ext.lower()], quality=VERSION_QUALITY, optimize=(os.path.splitext(version_path)[1] != '.gif'))
-        except IOError:
+        except OSError:
             version.save(tmpfile, format=Image.EXTENSION[ext.lower()], quality=VERSION_QUALITY)
         # remove old version, if any
         if version_path != self.site.storage.get_available_name(version_path):

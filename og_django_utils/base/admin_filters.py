@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
@@ -22,8 +20,8 @@ class BaseAdminSelectFilter(admin.SimpleListFilter):
         if not self.parameter_name:
             self.parameter_name = self.make_parameter_name()
         if not self.field_to_filter_against:
-            self.field_to_filter_against = '{}_id'.format(self.parameter_name)
-        super(BaseAdminSelectFilter, self).__init__(request, params, model, model_admin)
+            self.field_to_filter_against = f'{self.parameter_name}_id'
+        super().__init__(request, params, model, model_admin)
 
     def make_parameter_name(self):
         """
@@ -31,7 +29,7 @@ class BaseAdminSelectFilter(admin.SimpleListFilter):
         """
         model = self.Meta.model
         if model:
-            parameter_name = '{}'.format(model.__name__.lower())
+            parameter_name = f'{model.__name__.lower()}'
             return parameter_name
         raise ImproperlyConfigured('Meta.model is not set')
 
@@ -71,7 +69,7 @@ class BaseAdminSelectFilter(admin.SimpleListFilter):
         :param single_object: single Meta.model object
         :return: str that defines displayed title of object on list
         """
-        title = '[{}] {}'.format(single_object.id, getattr(single_object, self.field_to_display))
+        title = f'[{single_object.id}] {getattr(single_object, self.field_to_display)}'
         return title
 
     def get_queryset_for_lookup(self):
