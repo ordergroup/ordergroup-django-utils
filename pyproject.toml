@@ -1,6 +1,6 @@
 [project]
 name = "og-django-utils"
-version = "1.0.0"
+version = "1.1.0"
 description = "OG Shared utils for Django projects"
 authors = [
     {name = "Michał Dżaman", email = "michal@ordergroup.pl"}
@@ -26,7 +26,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "django>=4.2,<5.2",
+    "django>=4.2",
     "django-stdimage>=6.0.0",
     "pillow>=10.0.0",
     "packaging>=23.0",
@@ -47,6 +47,8 @@ dev = [
     "ruff>=0.8.4",
     "pytest>=8.3.4",
     "pytest-django>=4.9.0",
+    "tox>=4.46.3",
+    "tox-uv>=1.33.0",
 ]
 
 [tool.ruff]
