@@ -4,10 +4,11 @@ from multiprocessing import Pool, cpu_count
 
 import progressbar
 from django.apps import apps
-from django.core.files.storage import default_storage, get_storage_class
+from django.core.files.storage import default_storage
 from django.core.management import BaseCommand, CommandError
 
 from og_django_utils.progressive_images.fields import ProgressiveImageFieldFile
+from og_django_utils.utils.storage import get_storage_class
 
 try:
     import resource
