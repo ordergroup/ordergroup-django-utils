@@ -14,7 +14,7 @@ def pytest_configure():
         INSTALLED_APPS=[
             "django.contrib.contenttypes",
             "django.contrib.auth",
-            "og_django_utils.db_backup",
+            "og_django_utils",
         ],
         SECRET_KEY="test-secret-key",
         USE_TZ=True,

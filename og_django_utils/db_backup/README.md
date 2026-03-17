@@ -25,12 +25,12 @@ pip install og-django-utils[db_backup_trigger]
 
 ## Setup
 
-1. Add to `INSTALLED_APPS`:
+1. Add `og_django_utils` to `INSTALLED_APPS` (if not already):
 
 ```python
 INSTALLED_APPS = [
     ...
-    "og_django_utils.db_backup",
+    "og_django_utils",
 ]
 ```
 

@@ -31,8 +31,8 @@ Quick start:
 ```bash
 pip install og-django-utils[db_backup]
 
-# Add to INSTALLED_APPS
-INSTALLED_APPS = [..., "og_django_utils.db_backup"]
+# Add to settings.py
+INSTALLED_APPS = [..., "og_django_utils"]
 
 # Run backup
 python manage.py db_backup
