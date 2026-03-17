@@ -29,9 +29,7 @@ class Command(BaseCommand):
         try:
             import boto3
         except ImportError:
-            self.stderr.write(
-                self.style.ERROR("boto3 is required but not found. Reinstall og-django-utils.")
-            )
+            self.stderr.write(self.style.ERROR("boto3 is required but not found. Reinstall og-django-utils."))
             sys.exit(1)
 
         config = get_config()

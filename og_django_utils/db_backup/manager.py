@@ -43,9 +43,7 @@ class BackupManager:
             try:
                 import boto3
             except ImportError as exc:
-                raise ImportError(
-                    "boto3 is required for S3 uploads but not found. Reinstall og-django-utils."
-                ) from exc
+                raise ImportError("boto3 is required for S3 uploads but not found. Reinstall og-django-utils.") from exc
             self._s3_client = boto3.client("s3", region_name=self.region)
         return self._s3_client
 
