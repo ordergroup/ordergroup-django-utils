@@ -18,11 +18,13 @@ class TestGetConfig:
         assert config["AWS_REGION"] == "eu-central-1"
         assert config["ECS_TASK_DEFINITION"] == "db-ops-backup"
 
-    @override_settings(DB_BACKUP={
-        "S3_BUCKET": "test-bucket",
-        "IDENTIFIER": "myapp-prod",
-        "ECS_CLUSTER": "prod-cluster",
-    })
+    @override_settings(
+        DB_BACKUP={
+            "S3_BUCKET": "test-bucket",
+            "IDENTIFIER": "myapp-prod",
+            "ECS_CLUSTER": "prod-cluster",
+        }
+    )
     def test_from_django_settings(self):
         config = get_config()
         assert config["S3_BUCKET"] == "test-bucket"
@@ -43,16 +45,18 @@ class TestGetConfig:
 
 
 class TestGetDbCredentials:
-    @override_settings(DATABASES={
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "HOST": "db.example.com",
-            "PORT": "5433",
-            "USER": "admin",
-            "PASSWORD": "secret",
-            "NAME": "myapp_db",
+    @override_settings(
+        DATABASES={
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "HOST": "db.example.com",
+                "PORT": "5433",
+                "USER": "admin",
+                "PASSWORD": "secret",
+                "NAME": "myapp_db",
+            }
         }
-    })
+    )
     def test_extracts_credentials(self):
         creds = get_db_credentials("default")
         assert creds["host"] == "db.example.com"
@@ -61,16 +65,18 @@ class TestGetDbCredentials:
         assert creds["password"] == "secret"
         assert creds["name"] == "myapp_db"
 
-    @override_settings(DATABASES={
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "HOST": "",
-            "PORT": "",
-            "USER": "postgres",
-            "PASSWORD": "",
-            "NAME": "testdb",
+    @override_settings(
+        DATABASES={
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "HOST": "",
+                "PORT": "",
+                "USER": "postgres",
+                "PASSWORD": "",
+                "NAME": "testdb",
+            }
         }
-    })
+    )
     def test_defaults_for_empty_host_port(self):
         creds = get_db_credentials("default")
         assert creds["host"] == "localhost"
@@ -80,26 +86,30 @@ class TestGetDbCredentials:
         with pytest.raises(ValueError, match="not found"):
             get_db_credentials("nonexistent")
 
-    @override_settings(DATABASES={
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
+    @override_settings(
+        DATABASES={
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": ":memory:",
+            }
         }
-    })
+    )
     def test_non_postgresql_raises(self):
         with pytest.raises(ValueError, match="only PostgreSQL"):
             get_db_credentials("default")
 
-    @override_settings(DATABASES={
-        "default": {
-            "ENGINE": "django.contrib.gis.db.backends.postgis",
-            "HOST": "localhost",
-            "PORT": "5432",
-            "USER": "geo",
-            "PASSWORD": "pass",
-            "NAME": "geodb",
+    @override_settings(
+        DATABASES={
+            "default": {
+                "ENGINE": "django.contrib.gis.db.backends.postgis",
+                "HOST": "localhost",
+                "PORT": "5432",
+                "USER": "geo",
+                "PASSWORD": "pass",
+                "NAME": "geodb",
+            }
         }
-    })
+    )
     def test_postgis_engine_works(self):
         creds = get_db_credentials("default")
         assert creds["user"] == "geo"
@@ -158,11 +168,13 @@ class TestBackupManager:
 
 
 class TestTriggerDbBackupCommand:
-    @override_settings(DB_BACKUP={
-        "ECS_CLUSTER": "test-cluster",
-        "ECS_TASK_DEFINITION": "test-task",
-        "AWS_REGION": "eu-central-1",
-    })
+    @override_settings(
+        DB_BACKUP={
+            "ECS_CLUSTER": "test-cluster",
+            "ECS_TASK_DEFINITION": "test-task",
+            "AWS_REGION": "eu-central-1",
+        }
+    )
     def test_trigger_calls_ecs_run_task(self):
         from django.core.management import call_command
 

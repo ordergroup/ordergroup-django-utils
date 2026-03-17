@@ -44,8 +44,7 @@ class BackupManager:
                 import boto3
             except ImportError as exc:
                 raise ImportError(
-                    "boto3 is required for S3 uploads. "
-                    "Install with: pip install og-django-utils[db_backup]"
+                    "boto3 is required for S3 uploads. Install with: pip install og-django-utils[db_backup]"
                 ) from exc
             self._s3_client = boto3.client("s3", region_name=self.region)
         return self._s3_client
@@ -59,10 +58,7 @@ class BackupManager:
         connection = connections[database_alias]
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT datname FROM pg_database "
-                "WHERE datistemplate = false "
-                "AND datallowconn = true "
-                "ORDER BY datname"
+                "SELECT datname FROM pg_database WHERE datistemplate = false AND datallowconn = true ORDER BY datname"
             )
             all_dbs = [row[0] for row in cursor.fetchall()]
         return [db for db in all_dbs if db not in self.db_exclude]
@@ -75,8 +71,7 @@ class BackupManager:
         """Verify pg_dump binary is available."""
         if not shutil.which("pg_dump"):
             raise FileNotFoundError(
-                "pg_dump not found. Install postgresql-client: "
-                "apt install postgresql-client / brew install postgresql"
+                "pg_dump not found. Install postgresql-client: apt install postgresql-client / brew install postgresql"
             )
 
     def _start_pipeline(
@@ -95,10 +90,14 @@ class BackupManager:
             "--no-owner",
             "--clean",
             "--if-exists",
-            "-h", host,
-            "-p", str(port),
-            "-U", user,
-            "-d", db_name,
+            "-h",
+            host,
+            "-p",
+            str(port),
+            "-U",
+            user,
+            "-d",
+            db_name,
         ]
 
         try:
@@ -137,7 +136,11 @@ class BackupManager:
             for step, rc, msg in errors:
                 logger.error(
                     "[%s/%s] %s failed (rc=%d): %s",
-                    identifier, db_name, step, rc, msg,
+                    identifier,
+                    db_name,
+                    step,
+                    rc,
+                    msg,
                 )
             return False
         return True
@@ -174,7 +177,10 @@ class BackupManager:
         s3_key = f"{self.s3_prefix}/{identifier}/{db_name}-{self.timestamp}.sql.gz"
         logger.info(
             "[%s/%s] Dumping -> s3://%s/%s",
-            identifier, db_name, self.s3_bucket, s3_key,
+            identifier,
+            db_name,
+            self.s3_bucket,
+            s3_key,
         )
 
         pipeline = self._start_pipeline(host, port, user, password, db_name, identifier)
@@ -202,7 +208,10 @@ class BackupManager:
 
         logger.info(
             "[%s/%s] Uploaded to s3://%s/%s",
-            identifier, db_name, self.s3_bucket, s3_key,
+            identifier,
+            db_name,
+            self.s3_bucket,
+            s3_key,
         )
         return True
 
@@ -305,7 +314,12 @@ class BackupManager:
         for db_name in databases:
             key = f"{identifier}/{db_name}"
             self.results[key] = self.dump_database(
-                host, port, user, password, db_name, identifier,
+                host,
+                port,
+                user,
+                password,
+                db_name,
+                identifier,
             )
 
         elapsed = time.monotonic() - start
@@ -315,7 +329,10 @@ class BackupManager:
 
         logger.info(
             "Done in %.1fs — %d/%d succeeded, %d failed",
-            elapsed, succeeded, total, failed,
+            elapsed,
+            succeeded,
+            total,
+            failed,
         )
 
         if failed:

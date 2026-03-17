@@ -6,10 +6,7 @@ from og_django_utils.db_backup.conf import get_config
 
 
 class Command(BaseCommand):
-    help = (
-        "Trigger a database backup ECS task on AWS. "
-        "Requires boto3: pip install og-django-utils[db_backup_trigger]"
-    )
+    help = "Trigger a database backup ECS task on AWS. Requires boto3: pip install og-django-utils[db_backup_trigger]"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -32,9 +29,9 @@ class Command(BaseCommand):
         try:
             import boto3
         except ImportError:
-            self.stderr.write(self.style.ERROR(
-                "boto3 is required. Install with: pip install og-django-utils[db_backup_trigger]"
-            ))
+            self.stderr.write(
+                self.style.ERROR("boto3 is required. Install with: pip install og-django-utils[db_backup_trigger]")
+            )
             sys.exit(1)
 
         config = get_config()
@@ -43,17 +40,14 @@ class Command(BaseCommand):
         region = options["region"] or config["AWS_REGION"]
 
         if not cluster:
-            self.stderr.write(self.style.ERROR(
-                "ECS cluster not configured. "
-                "Set settings.DB_BACKUP['ECS_CLUSTER'] or use --cluster"
-            ))
+            self.stderr.write(
+                self.style.ERROR("ECS cluster not configured. Set settings.DB_BACKUP['ECS_CLUSTER'] or use --cluster")
+            )
             sys.exit(1)
 
         ecs = boto3.client("ecs", region_name=region)
 
-        self.stdout.write(
-            f"Triggering ECS task: {task_definition} on cluster {cluster} ({region})"
-        )
+        self.stdout.write(f"Triggering ECS task: {task_definition} on cluster {cluster} ({region})")
 
         try:
             response = ecs.run_task(
@@ -69,9 +63,7 @@ class Command(BaseCommand):
         if tasks:
             task_arn = tasks[0]["taskArn"]
             self.stdout.write(self.style.SUCCESS(f"Task started: {task_arn}"))
-            self.stdout.write(
-                f"View logs: aws logs tail /ecs/{task_definition} --follow --region {region}"
-            )
+            self.stdout.write(f"View logs: aws logs tail /ecs/{task_definition} --follow --region {region}")
         else:
             failures = response.get("failures", [])
             self.stderr.write(self.style.ERROR(f"Task failed to start: {failures}"))

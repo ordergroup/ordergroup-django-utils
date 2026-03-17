@@ -21,10 +21,12 @@ def get_config() -> dict:
 
     return {
         "S3_BUCKET": user_conf.get(
-            "S3_BUCKET", os.environ.get("BACKUP_S3_BUCKET", ""),
+            "S3_BUCKET",
+            os.environ.get("BACKUP_S3_BUCKET", ""),
         ),
         "S3_PREFIX": user_conf.get(
-            "S3_PREFIX", os.environ.get("BACKUP_S3_PREFIX", DEFAULT_S3_PREFIX),
+            "S3_PREFIX",
+            os.environ.get("BACKUP_S3_PREFIX", DEFAULT_S3_PREFIX),
         ),
         "S3_STORAGE_CLASS": user_conf.get(
             "S3_STORAGE_CLASS",
@@ -36,16 +38,20 @@ def get_config() -> dict:
         ),
         "DB_EXCLUDE": set(user_conf.get("DB_EXCLUDE", DEFAULT_EXCLUDE)),
         "IDENTIFIER": user_conf.get(
-            "IDENTIFIER", os.environ.get("BACKUP_IDENTIFIER", ""),
+            "IDENTIFIER",
+            os.environ.get("BACKUP_IDENTIFIER", ""),
         ),
         "AWS_REGION": user_conf.get(
-            "AWS_REGION", os.environ.get("AWS_REGION", DEFAULT_AWS_REGION),
+            "AWS_REGION",
+            os.environ.get("AWS_REGION", DEFAULT_AWS_REGION),
         ),
         "TIMESTAMP_FORMAT": user_conf.get(
-            "TIMESTAMP_FORMAT", DEFAULT_TIMESTAMP_FORMAT,
+            "TIMESTAMP_FORMAT",
+            DEFAULT_TIMESTAMP_FORMAT,
         ),
         "ECS_CLUSTER": user_conf.get(
-            "ECS_CLUSTER", os.environ.get("BACKUP_ECS_CLUSTER", ""),
+            "ECS_CLUSTER",
+            os.environ.get("BACKUP_ECS_CLUSTER", ""),
         ),
         "ECS_TASK_DEFINITION": user_conf.get(
             "ECS_TASK_DEFINITION",
@@ -62,10 +68,7 @@ def get_db_credentials(database_alias: str = "default") -> dict:
 
     engine = db_settings.get("ENGINE", "")
     if "postgresql" not in engine and "postgis" not in engine:
-        raise ValueError(
-            f"Database '{database_alias}' uses engine '{engine}', "
-            "but only PostgreSQL is supported"
-        )
+        raise ValueError(f"Database '{database_alias}' uses engine '{engine}', but only PostgreSQL is supported")
 
     return {
         "host": db_settings.get("HOST") or "localhost",

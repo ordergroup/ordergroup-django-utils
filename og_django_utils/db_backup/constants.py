@@ -1,9 +1,11 @@
-DEFAULT_EXCLUDE = frozenset({
-    "postgres",
-    "template0",
-    "template1",
-    "rdsadmin",
-})
+DEFAULT_EXCLUDE = frozenset(
+    {
+        "postgres",
+        "template0",
+        "template1",
+        "rdsadmin",
+    }
+)
 
 DEFAULT_TIMESTAMP_FORMAT = "%Y%m%d_%H%M%S"
 
