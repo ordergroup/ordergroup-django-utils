@@ -162,7 +162,7 @@ class TestBackupManager:
     def test_s3_client_requires_boto3(self):
         from og_django_utils.db_backup.manager import BackupManager
 
-        manager = BackupManager(S3_BUCKET="test")
+        BackupManager(S3_BUCKET="test")
         with patch.dict("sys.modules", {"boto3": None}):
             pass
 
