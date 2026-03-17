@@ -4,17 +4,7 @@ PostgreSQL backup tool integrated with Django. Reads credentials from `settings.
 
 ## Installation
 
-```bash
-# For direct backups with S3 upload (needs pg_dump on host)
-pip install og-django-utils[db_backup]
-
-# For ECS trigger only (ECS task handles S3 upload)
-pip install og-django-utils[db_backup_trigger]
-```
-
-**Both options support S3 backups:**
-- `db_backup` — your Django app uploads to S3 (needs boto3 + pg_dump locally)
-- `trigger_db_backup` — ECS task uploads to S3 (only needs boto3 to trigger the task)
+Included in `og-django-utils` — no extra installation needed. Both commands are available once `og_django_utils` is in `INSTALLED_APPS`.
 
 ## Two commands
 
@@ -219,11 +209,11 @@ python manage.py db_backup --all-databases --s3-bucket my-backups
   - Ubuntu/Debian: `apt install postgresql-client`
   - macOS: `brew install postgresql`
   - Alpine: `apk add postgresql-client`
-- `boto3` (if using S3): `pip install og-django-utils[db_backup]`
+- `boto3` (included in `og-django-utils`)
 
 ### For `trigger_db_backup` command
 
-- `boto3`: `pip install og-django-utils[db_backup_trigger]`
+- `boto3` (included in `og-django-utils`)
 - AWS credentials configured (IAM role or environment variables)
 - ECS task definition deployed (see db-ops repo)
 

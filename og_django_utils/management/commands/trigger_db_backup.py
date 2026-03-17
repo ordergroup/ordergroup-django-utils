@@ -6,7 +6,7 @@ from og_django_utils.db_backup.conf import get_config
 
 
 class Command(BaseCommand):
-    help = "Trigger a database backup ECS task on AWS. Requires boto3: pip install og-django-utils[db_backup_trigger]"
+    help = "Trigger a database backup ECS task on AWS."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -30,7 +30,7 @@ class Command(BaseCommand):
             import boto3
         except ImportError:
             self.stderr.write(
-                self.style.ERROR("boto3 is required. Install with: pip install og-django-utils[db_backup_trigger]")
+                self.style.ERROR("boto3 is required but not found. Reinstall og-django-utils.")
             )
             sys.exit(1)
 

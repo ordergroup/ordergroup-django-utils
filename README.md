@@ -7,13 +7,7 @@ Shared utils package for Django projects.
 ```bash
 pip install og-django-utils
 
-# Database backup - direct execution (needs pg_dump + boto3)
-pip install og-django-utils[db_backup]
-
-# Database backup - ECS trigger only (needs boto3, ECS task handles backup)
-pip install og-django-utils[db_backup_trigger]
-
-# Encrypted media paths
+# With encrypted media paths
 pip install og-django-utils[encrypted_media_paths]
 ```
 
@@ -29,8 +23,6 @@ PostgreSQL backup tool with Django integration. Two management commands:
 
 Quick start:
 ```bash
-pip install og-django-utils[db_backup]
-
 # Add to settings.py
 INSTALLED_APPS = [..., "og_django_utils"]
 

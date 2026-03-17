@@ -287,6 +287,7 @@ name = "og-django-utils"
 version = "1.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "boto3" },
     { name = "django" },
     { name = "django-stdimage" },
     { name = "packaging" },
@@ -294,12 +295,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-db-backup = [
-    { name = "boto3" },
-]
-db-backup-trigger = [
-    { name = "boto3" },
-]
 dev = [
     { name = "pytest" },
     { name = "pytest-django" },
@@ -320,8 +315,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "boto3", marker = "extra == 'db-backup'", specifier = ">=1.28.0" },
-    { name = "boto3", marker = "extra == 'db-backup-trigger'", specifier = ">=1.28.0" },
+    { name = "boto3", specifier = ">=1.28.0" },
     { name = "cryptography", marker = "extra == 'encrypted-media-paths'", specifier = ">=41.0.0" },
     { name = "django", specifier = ">=4.2" },
     { name = "django-stdimage", specifier = ">=6.0.0" },
@@ -331,7 +325,7 @@ requires-dist = [
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.9.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.4" },
 ]
-provides-extras = ["encrypted-media-paths", "db-backup", "db-backup-trigger", "dev"]
+provides-extras = ["encrypted-media-paths", "dev"]
 
 [package.metadata.requires-dev]
 dev = [
