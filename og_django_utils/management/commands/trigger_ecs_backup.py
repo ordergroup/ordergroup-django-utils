@@ -2,7 +2,7 @@ import sys
 
 from django.core.management.base import BaseCommand
 
-from og_django_utils.db_backup.conf import get_config
+from og_django_utils.rds_backup.conf import get_config
 
 
 class Command(BaseCommand):
@@ -12,17 +12,17 @@ class Command(BaseCommand):
         parser.add_argument(
             "--cluster",
             default=None,
-            help="ECS cluster name (overrides settings.DB_BACKUP['ECS_CLUSTER'])",
+            help="ECS cluster name (overrides settings.RDS_BACKUP['ECS_CLUSTER'])",
         )
         parser.add_argument(
             "--task-definition",
             default=None,
-            help="ECS task definition (overrides settings.DB_BACKUP['ECS_TASK_DEFINITION'])",
+            help="ECS task definition (overrides settings.RDS_BACKUP['ECS_TASK_DEFINITION'])",
         )
         parser.add_argument(
             "--region",
             default=None,
-            help="AWS region (overrides settings.DB_BACKUP['AWS_REGION'])",
+            help="AWS region (overrides settings.RDS_BACKUP['AWS_REGION'])",
         )
 
     def handle(self, *args, **options):
@@ -39,7 +39,7 @@ class Command(BaseCommand):
 
         if not cluster:
             self.stderr.write(
-                self.style.ERROR("ECS cluster not configured. Set settings.DB_BACKUP['ECS_CLUSTER'] or use --cluster")
+                self.style.ERROR("ECS cluster not configured. Set settings.RDS_BACKUP['ECS_CLUSTER'] or use --cluster")
             )
             sys.exit(1)
 

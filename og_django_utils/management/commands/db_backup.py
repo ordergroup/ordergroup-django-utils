@@ -2,7 +2,7 @@ import sys
 
 from django.core.management.base import BaseCommand
 
-from og_django_utils.db_backup.manager import BackupManager
+from og_django_utils.rds_backup.manager import RDSBackupManager
 
 
 class Command(BaseCommand):
@@ -27,7 +27,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--s3-bucket",
             default=None,
-            help="S3 bucket name. If not set, saves locally (overrides settings.DB_BACKUP)",
+            help="S3 bucket name. If not set, saves locally (overrides settings.RDS_BACKUP)",
         )
         parser.add_argument(
             "--s3-prefix",
@@ -57,7 +57,7 @@ class Command(BaseCommand):
             overrides["IDENTIFIER"] = options["identifier"]
 
         try:
-            manager = BackupManager(**overrides)
+            manager = RDSBackupManager(**overrides)
             exit_code = manager.backup_databases(
                 database_alias=options["database"],
                 all_databases=options["all_databases"],

@@ -17,9 +17,9 @@ pip install og-django-utils[encrypted_media_paths]
 
 PostgreSQL backup tool with Django integration. Two management commands:
 - `db_backup` — runs `pg_dump | gzip` locally or on EC2
-- `trigger_db_backup` — triggers an ECS backup task
+- `trigger_ecs_backup` — triggers an ECS backup task
 
-**[Full documentation →](og_django_utils/db_backup/README.md)**
+**[Full documentation →](og_django_utils/rds_backup/README.md)**
 
 Quick start:
 ```bash

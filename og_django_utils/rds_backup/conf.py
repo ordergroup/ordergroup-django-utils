@@ -13,11 +13,11 @@ from .constants import (
 
 
 def get_config() -> dict:
-    """Merge settings.DB_BACKUP with defaults and env var fallbacks.
+    """Merge settings.RDS_BACKUP with defaults and env var fallbacks.
 
-    Priority: settings.DB_BACKUP > environment variable > default value.
+    Priority: settings.RDS_BACKUP > environment variable > default value.
     """
-    user_conf = getattr(settings, "DB_BACKUP", {})
+    user_conf = getattr(settings, "RDS_BACKUP", {})
 
     return {
         "S3_BUCKET": user_conf.get(
@@ -43,7 +43,7 @@ def get_config() -> dict:
         ),
         "AWS_REGION": user_conf.get(
             "AWS_REGION",
-            os.environ.get("AWS_REGION", DEFAULT_AWS_REGION),
+            os.environ.get("AWS_REGION"),
         ),
         "TIMESTAMP_FORMAT": user_conf.get(
             "TIMESTAMP_FORMAT",

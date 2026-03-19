@@ -9,14 +9,54 @@ from django.db import connections
 
 from .conf import get_config, get_db_credentials
 
-logger = logging.getLogger("og.db_backup")
+logger = logging.getLogger("og.rds_backup")
 
 
-class BackupManager:
-    """PostgreSQL backup manager that reads configuration from Django settings.
+class RDSBackupManager:
+    """RDS PostgreSQL backup manager integrated with Django.
 
-    Runs pg_dump | gzip pipeline and saves output to S3 or local file.
-    Uses Django's database connection for database discovery.
+    Reads database credentials from ``settings.DATABASES`` and backup
+    configuration from ``settings.RDS_BACKUP``.  Runs a ``pg_dump | gzip``
+    pipeline and streams the output to **S3** or saves it **locally**.
+
+    Two Django management commands expose this class:
+
+    ``db_backup`` — direct backup (requires ``pg_dump`` on the host)::
+
+        # back up the default Django database to a local directory
+        python manage.py db_backup
+
+        # back up to S3
+        python manage.py db_backup --s3-bucket my-backups
+
+        # back up every database on the PostgreSQL server
+        python manage.py db_backup --all-databases
+
+    ``trigger_ecs_backup`` — trigger an ECS task that runs the backup::
+
+        # trigger using settings.RDS_BACKUP config
+        python manage.py trigger_ecs_backup
+
+        # override cluster and task definition
+        python manage.py trigger_ecs_backup --cluster prod --task-definition db-ops-backup
+
+    Programmatic usage::
+
+        from og_django_utils.rds_backup.manager import RDSBackupManager
+
+        manager = RDSBackupManager(S3_BUCKET="my-bucket")
+        exit_code = manager.backup_databases()          # single DB
+        exit_code = manager.backup_databases(all_databases=True)  # all DBs
+
+    Environment variables / settings.RDS_BACKUP required for S3 mode:
+
+    - ``S3_BUCKET``  — target S3 bucket name
+    - ``AWS_REGION``  — AWS region (default ``eu-central-1``)
+
+    For ECS trigger mode (``trigger_ecs_backup`` command):
+
+    - ``ECS_CLUSTER``  — ECS cluster name (required)
+    - ``ECS_TASK_DEFINITION`` — task definition (default ``db-ops-backup``)
     """
 
     def __init__(self, **overrides):
@@ -37,6 +77,91 @@ class BackupManager:
 
         self.results: dict[str, bool] = {}
 
+    def backup_databases(
+        self,
+        database_alias: str = "default",
+        all_databases: bool = False,
+    ) -> int:
+        """Back up one or more PostgreSQL databases.
+
+        Reads credentials from ``settings.DATABASES[database_alias]``.
+        When *all_databases* is ``True``, discovers every non-template
+        database on the server and backs them all up.
+
+        Returns ``0`` on success, ``1`` if every backup failed.
+        """
+        self._check_pg_dump()
+
+        creds = get_db_credentials(database_alias)
+        host = creds["host"]
+        port = creds["port"]
+        user = creds["user"]
+        password = creds["password"]
+        identifier = self.identifier or creds["name"]
+
+        start = time.monotonic()
+
+        if not self.use_s3:
+            logger.info("S3 not configured — saving dumps locally to %s", self.local_backup_dir)
+
+        if all_databases:
+            databases = self.get_databases(database_alias)
+            if not databases:
+                logger.warning("No databases to back up")
+                return 1
+            logger.info("Databases: %s", ", ".join(databases))
+        else:
+            db_name = creds["name"]
+            if not db_name:
+                raise ValueError("No database name in Django settings.DATABASES")
+            databases = [db_name]
+            logger.info("Backing up database: %s", db_name)
+
+        for db_name in databases:
+            key = f"{identifier}/{db_name}"
+            if self.use_s3:
+                self.results[key] = self._dump_to_s3(host, port, user, password, db_name, identifier)
+            else:
+                self.results[key] = self._dump_to_local_storage(host, port, user, password, db_name, identifier)
+
+        elapsed = time.monotonic() - start
+        total = len(self.results)
+        succeeded = sum(1 for v in self.results.values() if v)
+        failed = total - succeeded
+
+        logger.info(
+            "Done in %.1fs — %d/%d succeeded, %d failed",
+            elapsed,
+            succeeded,
+            total,
+            failed,
+        )
+
+        if failed:
+            logger.warning(
+                "Failed: %s",
+                ", ".join(k for k, v in self.results.items() if not v),
+            )
+
+        if total > 0 and failed == total:
+            return 1
+        return 0
+
+    def get_databases(self, database_alias: str = "default") -> list[str]:
+        """List non-template, connectable databases on the PostgreSQL server.
+
+        Uses Django's database connection for the given *database_alias*
+        and excludes system databases (``postgres``, ``template0``, etc.).
+        """
+        connection = connections[database_alias]
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT datname FROM pg_database WHERE datistemplate = false AND datallowconn = true ORDER BY datname"
+            )
+            all_dbs = [row[0] for row in cursor.fetchall()]
+        return [db for db in all_dbs if db not in self.db_exclude]
+
+
     @property
     def s3_client(self):
         if self._s3_client is None:
@@ -47,26 +172,7 @@ class BackupManager:
             self._s3_client = boto3.client("s3", region_name=self.region)
         return self._s3_client
 
-    # ------------------------------------------------------------------
-    # Database discovery via Django connection
-    # ------------------------------------------------------------------
-
-    def get_databases(self, database_alias: str = "default") -> list[str]:
-        """List non-template, connectable databases using Django's connection."""
-        connection = connections[database_alias]
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT datname FROM pg_database WHERE datistemplate = false AND datallowconn = true ORDER BY datname"
-            )
-            all_dbs = [row[0] for row in cursor.fetchall()]
-        return [db for db in all_dbs if db not in self.db_exclude]
-
-    # ------------------------------------------------------------------
-    # Dump pipeline
-    # ------------------------------------------------------------------
-
     def _check_pg_dump(self) -> None:
-        """Verify pg_dump binary is available."""
         if not shutil.which("pg_dump"):
             raise FileNotFoundError(
                 "pg_dump not found. Install postgresql-client: apt install postgresql-client / brew install postgresql"
@@ -81,7 +187,6 @@ class BackupManager:
         db_name: str,
         identifier: str,
     ) -> tuple[subprocess.Popen, subprocess.Popen] | None:
-        """Start pg_dump | gzip pipeline."""
         env = {**os.environ, "PGPASSWORD": password}
         pg_dump_cmd = [
             "pg_dump",
@@ -125,7 +230,6 @@ class BackupManager:
         identifier: str,
         db_name: str,
     ) -> bool:
-        """Wait for both processes and check exit codes."""
         p_gzip.wait()
         p_dump.wait()
 
@@ -158,10 +262,6 @@ class BackupManager:
                 proc.stderr.close()
         return errors
 
-    # ------------------------------------------------------------------
-    # Dump to S3
-    # ------------------------------------------------------------------
-
     def _dump_to_s3(
         self,
         host: str,
@@ -171,7 +271,6 @@ class BackupManager:
         db_name: str,
         identifier: str,
     ) -> bool:
-        """Stream pg_dump | gzip directly to S3."""
         s3_key = f"{self.s3_prefix}/{identifier}/{db_name}-{self.timestamp}.sql.gz"
         logger.info(
             "[%s/%s] Dumping -> s3://%s/%s",
@@ -213,11 +312,8 @@ class BackupManager:
         )
         return True
 
-    # ------------------------------------------------------------------
-    # Dump to local file
-    # ------------------------------------------------------------------
 
-    def _dump_to_local(
+    def _dump_to_local_storage(
         self,
         host: str,
         port: int,
@@ -226,7 +322,6 @@ class BackupManager:
         db_name: str,
         identifier: str,
     ) -> bool:
-        """Stream pg_dump | gzip to a local file."""
         out_dir = Path(self.local_backup_dir) / identifier
         out_dir.mkdir(parents=True, exist_ok=True)
         out_file = out_dir / f"{db_name}-{self.timestamp}.sql.gz"
@@ -254,91 +349,3 @@ class BackupManager:
 
         logger.info("[%s/%s] Saved to %s", identifier, db_name, out_file)
         return True
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
-    def dump_database(
-        self,
-        host: str,
-        port: int,
-        user: str,
-        password: str,
-        db_name: str,
-        identifier: str,
-    ) -> bool:
-        """Run pg_dump | gzip and save to S3 or local file."""
-        if self.use_s3:
-            return self._dump_to_s3(host, port, user, password, db_name, identifier)
-        return self._dump_to_local(host, port, user, password, db_name, identifier)
-
-    def backup_databases(
-        self,
-        database_alias: str = "default",
-        all_databases: bool = False,
-    ) -> int:
-        """Backup databases using credentials from Django settings.
-
-        Returns 0 on success, 1 if all backups failed.
-        """
-        self._check_pg_dump()
-
-        creds = get_db_credentials(database_alias)
-        host = creds["host"]
-        port = creds["port"]
-        user = creds["user"]
-        password = creds["password"]
-        identifier = self.identifier or creds["name"]
-
-        start = time.monotonic()
-
-        if not self.use_s3:
-            logger.info("S3 not configured — saving dumps locally to %s", self.local_backup_dir)
-
-        if all_databases:
-            databases = self.get_databases(database_alias)
-            if not databases:
-                logger.warning("No databases to back up")
-                return 1
-            logger.info("Databases: %s", ", ".join(databases))
-        else:
-            db_name = creds["name"]
-            if not db_name:
-                raise ValueError("No database name in Django settings.DATABASES")
-            databases = [db_name]
-            logger.info("Backing up database: %s", db_name)
-
-        for db_name in databases:
-            key = f"{identifier}/{db_name}"
-            self.results[key] = self.dump_database(
-                host,
-                port,
-                user,
-                password,
-                db_name,
-                identifier,
-            )
-
-        elapsed = time.monotonic() - start
-        total = len(self.results)
-        succeeded = sum(1 for v in self.results.values() if v)
-        failed = total - succeeded
-
-        logger.info(
-            "Done in %.1fs — %d/%d succeeded, %d failed",
-            elapsed,
-            succeeded,
-            total,
-            failed,
-        )
-
-        if failed:
-            logger.warning(
-                "Failed: %s",
-                ", ".join(k for k, v in self.results.items() if not v),
-            )
-
-        if total > 0 and failed == total:
-            return 1
-        return 0

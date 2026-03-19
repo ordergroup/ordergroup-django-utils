@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.test import override_settings
 
-from og_django_utils.db_backup.conf import get_config, get_db_credentials
-from og_django_utils.db_backup.constants import DEFAULT_EXCLUDE
+from og_django_utils.rds_backup.conf import get_config, get_db_credentials
+from og_django_utils.rds_backup.constants import DEFAULT_EXCLUDE
 
 
 class TestGetConfig:
@@ -19,7 +19,7 @@ class TestGetConfig:
         assert config["ECS_TASK_DEFINITION"] == "db-ops-backup"
 
     @override_settings(
-        DB_BACKUP={
+        RDS_BACKUP={
             "S3_BUCKET": "test-bucket",
             "IDENTIFIER": "myapp-prod",
             "ECS_CLUSTER": "prod-cluster",
@@ -32,7 +32,7 @@ class TestGetConfig:
         assert config["ECS_CLUSTER"] == "prod-cluster"
         assert config["S3_PREFIX"] == "dumps"
 
-    @override_settings(DB_BACKUP={"S3_BUCKET": "from-settings"})
+    @override_settings(RDS_BACKUP={"S3_BUCKET": "from-settings"})
     def test_settings_take_priority_over_env(self):
         with patch.dict("os.environ", {"BACKUP_S3_BUCKET": "from-env"}):
             config = get_config()
@@ -115,7 +115,7 @@ class TestGetDbCredentials:
         assert creds["user"] == "geo"
 
 
-class TestBackupManager:
+class TestRDSBackupManager:
     @override_settings(
         DATABASES={
             "default": {
@@ -127,49 +127,49 @@ class TestBackupManager:
                 "NAME": "testdb",
             }
         },
-        DB_BACKUP={"IDENTIFIER": "test-app"},
+        RDS_BACKUP={"IDENTIFIER": "test-app"},
     )
     @patch("shutil.which", return_value=None)
     def test_raises_if_pg_dump_missing(self, mock_which):
-        from og_django_utils.db_backup.manager import BackupManager
+        from og_django_utils.rds_backup.manager import RDSBackupManager
 
-        manager = BackupManager()
+        manager = RDSBackupManager()
         with pytest.raises(FileNotFoundError, match="pg_dump not found"):
             manager.backup_databases()
 
-    @override_settings(DB_BACKUP={"S3_BUCKET": "my-bucket"})
+    @override_settings(RDS_BACKUP={"S3_BUCKET": "my-bucket"})
     def test_s3_mode_detected(self):
-        from og_django_utils.db_backup.manager import BackupManager
+        from og_django_utils.rds_backup.manager import RDSBackupManager
 
-        manager = BackupManager()
+        manager = RDSBackupManager()
         assert manager.use_s3 is True
 
-    @override_settings(DB_BACKUP={})
+    @override_settings(RDS_BACKUP={})
     def test_local_mode_detected(self):
-        from og_django_utils.db_backup.manager import BackupManager
+        from og_django_utils.rds_backup.manager import RDSBackupManager
 
-        manager = BackupManager()
+        manager = RDSBackupManager()
         assert manager.use_s3 is False
 
     def test_overrides_in_constructor(self):
-        from og_django_utils.db_backup.manager import BackupManager
+        from og_django_utils.rds_backup.manager import RDSBackupManager
 
-        manager = BackupManager(S3_BUCKET="override-bucket", IDENTIFIER="custom-id")
+        manager = RDSBackupManager(S3_BUCKET="override-bucket", IDENTIFIER="custom-id")
         assert manager.s3_bucket == "override-bucket"
         assert manager.identifier == "custom-id"
         assert manager.use_s3 is True
 
     def test_s3_client_requires_boto3(self):
-        from og_django_utils.db_backup.manager import BackupManager
+        from og_django_utils.rds_backup.manager import RDSBackupManager
 
-        BackupManager(S3_BUCKET="test")
+        RDSBackupManager(S3_BUCKET="test")
         with patch.dict("sys.modules", {"boto3": None}):
             pass
 
 
-class TestTriggerDbBackupCommand:
+class TestTriggerEcsBackupCommand:
     @override_settings(
-        DB_BACKUP={
+        RDS_BACKUP={
             "ECS_CLUSTER": "test-cluster",
             "ECS_TASK_DEFINITION": "test-task",
             "AWS_REGION": "eu-central-1",
@@ -188,7 +188,7 @@ class TestTriggerDbBackupCommand:
         mock_boto3.client.return_value = mock_ecs
 
         with patch.dict("sys.modules", {"boto3": mock_boto3}):
-            call_command("trigger_db_backup")
+            call_command("trigger_ecs_backup")
 
         mock_boto3.client.assert_called_once_with("ecs", region_name="eu-central-1")
         mock_ecs.run_task.assert_called_once_with(
