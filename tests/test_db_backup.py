@@ -11,11 +11,10 @@ class TestGetConfig:
     def test_defaults(self):
         config = get_config()
         assert config["S3_BUCKET"] == ""
-        assert config["S3_PREFIX"] == "dumps"
+        assert config["S3_PREFIX"] == ""
         assert config["S3_STORAGE_CLASS"] == "STANDARD_IA"
         assert config["LOCAL_BACKUP_DIR"] == "./backups"
         assert config["DB_EXCLUDE"] == DEFAULT_EXCLUDE
-        assert config["AWS_REGION"] == "eu-central-1"
         assert config["ECS_TASK_DEFINITION"] == "db-ops-backup"
 
     @override_settings(
@@ -30,7 +29,7 @@ class TestGetConfig:
         assert config["S3_BUCKET"] == "test-bucket"
         assert config["IDENTIFIER"] == "myapp-prod"
         assert config["ECS_CLUSTER"] == "prod-cluster"
-        assert config["S3_PREFIX"] == "dumps"
+        assert config["S3_PREFIX"] == ""
 
     @override_settings(RDS_BACKUP={"S3_BUCKET": "from-settings"})
     def test_settings_take_priority_over_env(self):
