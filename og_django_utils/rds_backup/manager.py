@@ -161,7 +161,6 @@ class RDSBackupManager:
             all_dbs = [row[0] for row in cursor.fetchall()]
         return [db for db in all_dbs if db not in self.db_exclude]
 
-
     @property
     def s3_client(self):
         if self._s3_client is None:
@@ -311,7 +310,6 @@ class RDSBackupManager:
             s3_key,
         )
         return True
-
 
     def _dump_to_local_storage(
         self,
