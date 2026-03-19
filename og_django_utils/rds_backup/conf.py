@@ -2,8 +2,7 @@ import os
 
 from django.conf import settings
 
-from .constants import (
-    DEFAULT_AWS_REGION,
+from og_django_utils.rds_backup.constants import (
     DEFAULT_EXCLUDE,
     DEFAULT_LOCAL_BACKUP_DIR,
     DEFAULT_S3_PREFIX,

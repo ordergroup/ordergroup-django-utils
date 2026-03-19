@@ -7,7 +7,7 @@ from pathlib import Path
 
 from django.db import connections
 
-from .conf import get_config, get_db_credentials
+from og_django_utils.rds_backup.conf import get_config, get_db_credentials
 
 logger = logging.getLogger("og.rds_backup")
 
