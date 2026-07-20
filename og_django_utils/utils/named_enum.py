@@ -20,6 +20,11 @@ class NamedEnumMetaclass(type):
         changed_future_class_attr["choices"] = list(names.items())
         return type.__new__(mcls, future_class_name, future_class_parents, changed_future_class_attr)
 
+    def __iter__(self):
+        # __iter__ has to be in the metaclass for the class itself to be iterable, e.g. `for member in SomeValueEnum`.
+        # NamedEnumMetaclass creates `names` on the class during creation, so it's always available
+        return iter(self.names)
+
     @classmethod
     def extract_ens(mcls, future_class_attr):
         ens = [(k, v) for k, v in future_class_attr.items() if mcls.is_en(v)]
