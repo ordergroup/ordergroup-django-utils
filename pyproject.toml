@@ -30,6 +30,7 @@ dependencies = [
     "django-stdimage>=6.0.0",
     "pillow>=10.0.0",
     "packaging>=23.0",
+    "boto3>=1.28.0",
 ]
 
 [project.optional-dependencies]

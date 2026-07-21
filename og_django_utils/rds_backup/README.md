@@ -1,0 +1,262 @@
+# RDS Backup Module
+
+PostgreSQL/RDS backup tool integrated with Django. Reads credentials from `settings.DATABASES` — no manual env var configuration needed.
+
+## Installation
+
+Included in `og-django-utils` — no extra installation needed. Both commands are available once `og_django_utils` is in `INSTALLED_APPS`.
+
+## Two commands
+
+| Command | What it does | Needs `pg_dump`? | Needs `boto3`? |
+|---|---|---|---|
+| `db_backup` | Runs `pg_dump \| gzip`, saves locally or to S3 | Yes | Only for S3 |
+| `trigger_ecs_backup` | Triggers an ECS backup task on AWS | No | Yes |
+
+## Setup
+
+1. Add `og_django_utils` to `INSTALLED_APPS` (if not already):
+
+```python
+INSTALLED_APPS = [
+    ...
+    "og_django_utils",
+]
+```
+
+2. Configure in `settings.py`:
+
+```python
+RDS_BACKUP = {
+    # S3 upload (leave empty for local mode)
+    "S3_BUCKET": "",
+    "S3_PREFIX": "dumps",
+    "S3_STORAGE_CLASS": "STANDARD_IA",
+
+    # Local backup directory
+    "LOCAL_BACKUP_DIR": "./backups",
+
+    # Backup identifier (default: database name)
+    "IDENTIFIER": "myapp",
+
+    # Databases to exclude from --all-databases
+    "DB_EXCLUDE": ["postgres", "template0", "template1", "rdsadmin"],
+
+    # AWS
+    "AWS_REGION": "eu-central-1",
+
+    # ECS trigger settings
+    "ECS_CLUSTER": "my-cluster",
+    "ECS_TASK_DEFINITION": "db-ops-backup",
+}
+```
+
+All settings have sensible defaults. For local development, you may not need any configuration at all.
+
+## Required environment variables
+
+### For S3 backup (both `db_backup` and ECS task)
+
+| Variable | Description | Required? |
+|---|---|---|
+| `settings.DATABASES` | Django database config with HOST, PORT, USER, PASSWORD, NAME | **Yes** |
+| `RDS_BACKUP["S3_BUCKET"]` or `BACKUP_S3_BUCKET` | Target S3 bucket name | **Yes** for S3 mode |
+| `RDS_BACKUP["AWS_REGION"]` or `AWS_REGION` | AWS region | No (default: `eu-central-1`) |
+| AWS credentials (IAM role or `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`) | For S3 upload and ECS trigger | **Yes** for S3/ECS |
+
+### For ECS trigger (`trigger_ecs_backup`)
+
+| Variable | Description | Required? |
+|---|---|---|
+| `RDS_BACKUP["ECS_CLUSTER"]` or `BACKUP_ECS_CLUSTER` | ECS cluster name | **Yes** |
+| `RDS_BACKUP["ECS_TASK_DEFINITION"]` or `BACKUP_ECS_TASK_DEFINITION` | ECS task definition | No (default: `db-ops-backup`) |
+
+### For local backup (`db_backup` without S3)
+
+No environment variables are required — reads everything from `settings.DATABASES`. Just needs `pg_dump` installed.
+
+## Usage: `db_backup`
+
+Runs backup directly. Requires `pg_dump` binary on the host.
+
+```bash
+# Back up Django's database locally
+python manage.py db_backup
+
+# Back up to S3
+python manage.py db_backup --s3-bucket my-backups
+
+# Back up all databases on the server
+python manage.py db_backup --all-databases
+
+# Custom output directory
+python manage.py db_backup --output-dir /tmp/dumps
+
+# Use a different Django database alias
+python manage.py db_backup --database replica
+```
+
+### When to use
+
+- **Local development** — test backups against your dev database
+- **EC2 deployments** — run backups directly on the server
+- **Bastion tunnels** — backup remote databases through SSH tunnel
+- **Any environment with `pg_dump` installed**
+
+## Usage: `trigger_ecs_backup`
+
+Triggers an ECS task to run the backup. No `pg_dump` needed — the ECS task container handles it.
+
+```bash
+# Trigger using settings.RDS_BACKUP config
+python manage.py trigger_ecs_backup
+
+# Override cluster/task
+python manage.py trigger_ecs_backup --cluster prod --task-definition db-ops-backup
+```
+
+### Programmatic usage
+
+```python
+from django.core.management import call_command
+
+# From a Celery task
+@app.task
+def nightly_backup():
+    call_command("trigger_ecs_backup")
+
+# From a Django admin action
+@admin.action(description="Trigger database backup")
+def trigger_backup(modeladmin, request, queryset):
+    call_command("trigger_ecs_backup")
+
+# From an API endpoint
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def trigger_backup(request):
+    call_command("trigger_ecs_backup")
+    return Response({"status": "Backup task started"})
+```
+
+### When to use
+
+- **ECS/Fargate containers** — your Django app doesn't have `pg_dump`
+- **On-demand backups** — trigger from admin, API, or Celery
+- **Scheduled backups** — via Celery Beat or Django-Q
+
+**Note:** This requires the db-ops Docker image to be deployed on ECS.
+
+## Configuration priority
+
+Settings are resolved in this order:
+
+1. Command-line arguments (e.g., `--s3-bucket`)
+2. `settings.RDS_BACKUP` dict
+3. Environment variables (prefixed with `BACKUP_`)
+4. Default values
+
+| Setting | Env var fallback | Default |
+|---|---|---|
+| `S3_BUCKET` | `BACKUP_S3_BUCKET` | empty (local mode) |
+| `S3_PREFIX` | `BACKUP_S3_PREFIX` | `dumps` |
+| `S3_STORAGE_CLASS` | `BACKUP_S3_STORAGE_CLASS` | `STANDARD_IA` |
+| `LOCAL_BACKUP_DIR` | `BACKUP_LOCAL_DIR` | `./backups` |
+| `IDENTIFIER` | `BACKUP_IDENTIFIER` | database name |
+| `AWS_REGION` | `AWS_REGION` | `eu-central-1` |
+| `ECS_CLUSTER` | `BACKUP_ECS_CLUSTER` | empty |
+| `ECS_TASK_DEFINITION` | `BACKUP_ECS_TASK_DEFINITION` | `db-ops-backup` |
+
+## Examples
+
+### Local development backup
+
+```bash
+# Minimal - backs up Django's database to ./backups/
+python manage.py db_backup
+```
+
+### Production EC2 with S3
+
+```python
+# settings.py
+RDS_BACKUP = {
+    "S3_BUCKET": "mycompany-db-backups",
+    "IDENTIFIER": "myapp-prod",
+}
+```
+
+```bash
+# Run on EC2
+python manage.py db_backup
+```
+
+### ECS containers with Celery scheduling
+
+```python
+# settings.py
+RDS_BACKUP = {
+    "ECS_CLUSTER": "production",
+    "ECS_TASK_DEFINITION": "db-ops-backup",
+}
+
+# tasks.py
+from celery import app
+from django.core.management import call_command
+
+@app.task
+def nightly_backup():
+    call_command("trigger_ecs_backup")
+
+# celerybeat schedule
+CELERY_BEAT_SCHEDULE = {
+    'nightly-backup': {
+        'task': 'myapp.tasks.nightly_backup',
+        'schedule': crontab(hour=2, minute=0),
+    },
+}
+```
+
+### Backup all databases on server
+
+```bash
+# Discovers all databases on PostgreSQL server and backs them up
+python manage.py db_backup --all-databases --s3-bucket my-backups
+```
+
+## Requirements
+
+### For `db_backup` command
+
+- `pg_dump` binary installed on the host
+  - Ubuntu/Debian: `apt install postgresql-client`
+  - macOS: `brew install postgresql`
+  - Alpine: `apk add postgresql-client`
+- `boto3` (included in `og-django-utils`)
+
+### For `trigger_ecs_backup` command
+
+- `boto3` (included in `og-django-utils`)
+- AWS credentials configured (IAM role or environment variables)
+- ECS task definition deployed (see db-ops repo)
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Django App (ECS Container)                                  │
+│                                                              │
+│  python manage.py trigger_ecs_backup                        │
+│         ↓                                                    │
+│  boto3.ecs.run_task()                                       │
+└──────────────────────┬──────────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────────┐
+│ ECS Task (db-ops Docker image)                              │
+│                                                              │
+│  pg_dump | gzip → S3                                        │
+│                                                              │
+│  Has: pg_dump binary, boto3, psycopg                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+The `trigger_ecs_backup` command is a thin wrapper that calls AWS ECS API. The actual backup runs in a separate container that has all the required tools.
