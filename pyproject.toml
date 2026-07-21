@@ -1,6 +1,6 @@
 [project]
 name = "og-django-utils"
-version = "1.1.0"
+version = "1.2.0"
 description = "OG Shared utils for Django projects"
 authors = [
     {name = "Michał Dżaman", email = "michal@ordergroup.pl"}
